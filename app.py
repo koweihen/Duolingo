@@ -250,57 +250,20 @@ div[data-baseweb="tab"] {
 # =========================================================================
 # START PART 4: IMAGE DATABASE & FETCHER
 # =========================================================================
-IMAGE_DATABASE = {
-    "Wu Dang Shan": "https://www.travelchinaguide.com/images/photogallery/2010/wudang-mountain.jpg",
-    "Lao Jun Shan": "https://www.travelchinaguide.com/images/photogallery/2018/0822161406.jpg",
-    "Wu Yi Shan": "https://www.travelchinaguide.com/images/photogallery/2012/0517112028.jpg",
-    "Long Hu Shan": "https://www.travelchinaguide.com/images/photogallery/2015/1022153215.jpg",
-    "Tian Mu Hu": "https://commons.wikimedia.org/wiki/Special:FilePath/%E5%A4%A9%E7%9B%AE%E6%B9%96%E5%A4%A7%E9%96%80.JPG?width=800",
-    "Lao Shan": "https://commons.wikimedia.org/wiki/Special:FilePath/Mount_Lao_from_within_the_Laoshan_National_Park.jpg?width=800"
-}
-
-@st.cache_data(show_spinner=False)
-def get_attraction_photo(attraction_name):
-    if attraction_name in IMAGE_DATABASE:
-        return IMAGE_DATABASE[attraction_name]
-        
-    endpoint = "https://en.wikipedia.org/w/api.php"
-    headers = {"User-Agent": "TourismRecommenderApp/8.0"}
-    
-    NAME_ALIASES = {
-        "Ba Li Gou": "Baligou", "Baili Gou": "Baligou", "Long Men Shi Ku": "Longmen Grottoes",
-        "Qing Ming Shang He Yuan": "Millennium City Park", "Si Gu Niang Shan": "Mount Siguniang",
-        "E Mei Shan": "Mount Emei", "Lao Jun Shan": "Mount Laojun", "Wu Dang Shan": "Wudang Mountains",
-        "Kai Feng Fu": "Kaifeng Prefecture", "Ning De Yuan Yang Xi": "Ningde"
-    }
-    
-    queries = []
-    if attraction_name in NAME_ALIASES:
-        alias = NAME_ALIASES[attraction_name]
-        queries.extend([f"{alias} China", alias, f"{alias} scenic area", f"{alias} Valley"])
-    
-    words = attraction_name.strip().split()
-    joined_name = "".join(words)
-    queries.extend([f"{joined_name} China", joined_name, f"{attraction_name} China", attraction_name])
-    
-    invalid_image_terms = ['map', 'logo', 'flag', 'emblem', 'icon', '.svg', 'symbol']
-    
-    for q in queries:
-        params = {
-            "action": "query", "format": "json", "generator": "search",
-            "gsrsearch": q, "gsrlimit": 2, "prop": "pageimages", "pithumbsize": 600
-        }
-        try:
-            response = requests.get(endpoint, params=params, headers=headers, timeout=3).json()
-            pages = response.get("query", {}).get("pages", {})
-            for page_id, page_info in pages.items():
-                if "thumbnail" in page_info and "source" in page_info["thumbnail"]:
-                    img_url = page_info["thumbnail"]["source"]
-                    if not any(bad in img_url.lower() for bad in invalid_image_terms):
-                        return img_url
-        except Exception:
-            continue
-            
+def get_attraction_photo(attraction_name, attr_meta_df):
+    """
+    Fetches the image URL directly from the provided metadata DataFrame.
+    Falls back to a placeholder if not found.
+    """
+    if attr_meta_df is not None and not attr_meta_df.empty:
+        meta_row = attr_meta_df[attr_meta_df['attraction_name'] == attraction_name]
+        if not meta_row.empty:
+            # Check for common column names for the image URL
+            for col in ['image_url', 'image_url', 'image', 'Image', 'url', 'photo_url']:
+                if col in meta_row.columns and pd.notna(meta_row[col].iloc[0]) and str(meta_row[col].iloc[0]).strip() != "":
+                    return str(meta_row[col].iloc[0]).strip()
+                    
+    # Fallback placeholder if no URL is found in the CSV
     seed = sum(ord(c) for c in attraction_name)
     return f"https://loremflickr.com/400/300/landscape,chinese?lock={seed}"
 # =========================================================================
@@ -322,7 +285,8 @@ def load_all_data_v2():
         df_raw = pd.DataFrame()
         attraction_spend_map = {}
     try:
-        attr_meta = pd.read_csv('attraction_metadata_filled.csv')
+        # UPDATED: Load the new file containing image URLs
+        attr_meta = pd.read_csv('attraction_metadata_with_images.csv')
     except Exception:
         attr_meta = pd.DataFrame()
 
@@ -559,7 +523,7 @@ try:
         # Streamlit button for "Start Explore"
         with st.container():
             col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
-            with col_btn2:   # <-- changed from col_btn1 to col_btn2
+            with col_btn2:
                 if st.button("Start Explore ➔", key="start_explore_btn", use_container_width=True):
                     st.session_state.active_page = "Recommendations"
                     st.rerun()
@@ -599,7 +563,8 @@ try:
                 lat = float(meta_row['latitude'].iloc[0]) if not meta_row.empty and not pd.isna(meta_row['latitude'].iloc[0]) else 35.0
                 lon = float(meta_row['longitude'].iloc[0]) if not meta_row.empty and not pd.isna(meta_row['longitude'].iloc[0]) else 105.0
         
-                img_url = get_attraction_photo(name)
+                # UPDATED: Call get_attraction_photo with attr_meta
+                img_url = get_attraction_photo(name, attr_meta)
                 seed = sum(ord(c) for c in name)
                 est_spend = f"¥{150 + (seed % 200)} ($22–$50)"
                 nav_link = f"https://www.google.com/maps/dir/?api=1&destination={lat},{lon}"
@@ -825,7 +790,8 @@ try:
                             lat = float(meta_row['latitude'].iloc[0]) if not meta_row.empty and not pd.isna(meta_row['latitude'].iloc[0]) else 35.0
                             lon = float(meta_row['longitude'].iloc[0]) if not meta_row.empty and not pd.isna(meta_row['longitude'].iloc[0]) else 105.0
                             
-                            img_url = get_attraction_photo(name)
+                            # UPDATED: Call get_attraction_photo with attr_meta
+                            img_url = get_attraction_photo(name, attr_meta)
                             seed = sum(ord(c) for c in name)
                             avg_spend = attraction_spend_map.get(name)
                             if avg_spend is not None:
