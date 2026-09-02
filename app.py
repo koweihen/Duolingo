@@ -1,3 +1,6 @@
+# =========================================================================
+# START PART 1: IMPORTS
+# =========================================================================
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -9,7 +12,13 @@ import os
 import streamlit.components.v1 as components
 import matplotlib.pyplot as plt
 import seaborn as sns
+# =========================================================================
+# END PART 1: IMPORTS
+# =========================================================================
 
+# =========================================================================
+# START PART 2: INITIAL VARIABLES & SESSION STATE SETUP
+# =========================================================================
 selected_age = "Ignore"
 selected_category = "Ignore"
 selected_province = "Ignore"
@@ -20,16 +29,22 @@ min_rating = 3.0
 top_n = 8
 active_tourist_id = None
 is_personalized = False
+
 if "recommendations" not in st.session_state:
     st.session_state.recommendations = []
     st.session_state.is_personalized = False
     st.session_state.active_tourist_id = None
 
-# --- 1. PAGE CONFIGURATION & CUSTOM CSS ---
-st.set_page_config(page_title="Personalized Tourism Recommender", layout="wide", page_icon="🗺️")
-
 if "active_page" not in st.session_state:
     st.session_state.active_page = "Home"
+# =========================================================================
+# END PART 2: INITIAL VARIABLES & SESSION STATE SETUP
+# =========================================================================
+
+# =========================================================================
+# START PART 3: PAGE CONFIGURATION & CUSTOM CSS
+# =========================================================================
+st.set_page_config(page_title="Personalized Tourism Recommender", layout="wide", page_icon="🗺️")
 
 st.markdown("""
     <div style="top: 15px; left: 80px; font-weight: bold; color: black; font-size: 5rem; z-index: 9999999;">
@@ -228,8 +243,13 @@ div[data-baseweb="tab"] {
 }
 </style>
 """, unsafe_allow_html=True)
+# =========================================================================
+# END PART 3: PAGE CONFIGURATION & CUSTOM CSS
+# =========================================================================
 
-# --- 2. IMAGE DATABASE & FETCHER ---
+# =========================================================================
+# START PART 4: IMAGE DATABASE & FETCHER
+# =========================================================================
 IMAGE_DATABASE = {
     "Wu Dang Shan": "https://www.travelchinaguide.com/images/photogallery/2010/wudang-mountain.jpg",
     "Lao Jun Shan": "https://www.travelchinaguide.com/images/photogallery/2018/0822161406.jpg",
@@ -283,8 +303,13 @@ def get_attraction_photo(attraction_name):
             
     seed = sum(ord(c) for c in attraction_name)
     return f"https://loremflickr.com/400/300/landscape,chinese?lock={seed}"
+# =========================================================================
+# END PART 4: IMAGE DATABASE & FETCHER
+# =========================================================================
 
-# --- 3. ML MODEL & DATA LOADER ---
+# =========================================================================
+# START PART 5: ML MODEL & DATA LOADER
+# =========================================================================
 @st.cache_resource
 def load_all_data_v2():
     try:
@@ -345,12 +370,19 @@ def load_all_data_v2():
         ml_ready = False
 
     return df_raw, attr_meta, eval_metrics_df, matrices, idx_to_item, user_to_idx, train_seen, ml_ready, attraction_spend_map
+# =========================================================================
+# END PART 5: ML MODEL & DATA LOADER
+# =========================================================================
 
-# Start main execution block
+# =========================================================================
+# START PART 6: MAIN APPLICATION EXECUTION
+# =========================================================================
 try:
     df_raw, attr_meta, eval_metrics_df, matrices, idx_to_item, user_to_idx, train_seen, ml_ready, attraction_spend_map = load_all_data_v2()
 
-    # --- 4. MULTI-MODEL RECOMMENDATION ENGINE ---
+    # =========================================================================
+    # START PART 6.1: RECOMMENDATION ENGINE LOGIC
+    # =========================================================================
     def generate_recommendations(tourist_id, selected_model, age, province, category, duration,
                                  spend_range, min_rating, season, top_n=8):
         filtered = df_raw.copy()
@@ -362,6 +394,7 @@ try:
             elif duration == "Medium (3-5 hours)": filtered = filtered[(filtered['visit_duration_hours'] > 3) & (filtered['visit_duration_hours'] <= 5)]
             elif duration == "Long (5+ hours)": filtered = filtered[filtered['visit_duration_hours'] > 5]
         if season != "Ignore": filtered = filtered[filtered['season'] == season]
+        
         # Spend amount filter (range)
         if spend_range is not None:
             min_spend, max_spend = spend_range
@@ -370,6 +403,7 @@ try:
                 (attraction_avg_spend >= min_spend) & (attraction_avg_spend <= max_spend)
             ].index
             filtered = filtered[filtered['attraction_name'].isin(valid_spend_attractions)]
+            
         # Minimum rating filter
         if min_rating is not None:
             filtered = filtered[filtered['rating'] >= min_rating]
@@ -421,9 +455,12 @@ try:
         top_spots = grouped.sort_values(by=['avg_rating', 'visit_count'], ascending=[False, False]).head(top_n)
         recs = [(row['attraction_name'], row['avg_rating']) for _, row in top_spots.iterrows()]
         return recs, False
+    # =========================================================================
+    # END PART 6.1: RECOMMENDATION ENGINE LOGIC
+    # =========================================================================
 
     # =========================================================================
-    # ========================== SIDEBAR (only algorithm + mode info) ==========
+    # START PART 6.2: SIDEBAR & ALGORITHM SELECTION
     # =========================================================================
     st.sidebar.header("🎯 Traveler Profile & Filters")
     st.sidebar.subheader("🧠 Algorithm Selection")
@@ -435,12 +472,12 @@ try:
         
     selected_model = st.sidebar.selectbox("Choose Recommendation Engine", options=model_options)
     st.sidebar.divider()
-
-    # We'll compute the persona info after defining main filters later, but we'll keep the sidebar info box.
-    # For now, we'll create placeholder for active_tourist_id and update after filters.
+    # =========================================================================
+    # END PART 6.2: SIDEBAR & ALGORITHM SELECTION
+    # =========================================================================
 
     # =========================================================================
-    # ========================== CUSTOM NAVIGATION =============================
+    # START PART 6.3: CUSTOM NAVIGATION
     # =========================================================================
     page_to_col = {"Home": 1, "Recommendations": 2, "Diagnostics": 3}
     active_col = page_to_col.get(st.session_state.active_page, 1)
@@ -488,12 +525,17 @@ try:
             st.rerun()
             
     st.markdown('<hr style="border: none; border-bottom: 1px solid #eaeaea; margin-top: 5px; margin-bottom: 25px;">', unsafe_allow_html=True)
-    
+    # =========================================================================
+    # END PART 6.3: CUSTOM NAVIGATION
+    # =========================================================================
 
     # =========================================================================
-    # ========================== PAGE CONTENT =================================
+    # START PART 6.4: PAGE CONTENT ROUTING
     # =========================================================================
-    # ========================== TAB 1: HOME ==================================
+    
+    # -------------------------------------------------------------------------
+    # TAB 1: HOME
+    # -------------------------------------------------------------------------
     if st.session_state.active_page == "Home":
         st.markdown("""
             <div class="hero-banner">
@@ -610,7 +652,10 @@ try:
             )
     
         st.markdown(why_choose_html, unsafe_allow_html=True)
-    # Tab 2
+
+    # -------------------------------------------------------------------------
+    # TAB 2: RECOMMENDATIONS
+    # -------------------------------------------------------------------------
     elif st.session_state.active_page == "Recommendations":
         # ========== Banner ==========
         st.markdown("""
@@ -821,8 +866,6 @@ try:
                             st.caption(f"🎯 {score:.0f}% AI Match | Avg Rating: {real_avg_rating:.2f} ⭐ | {level}")
                             pass
         
-        
-            
         # --- Monochrome info-panel CSS (matches white background) ---
         st.markdown("""
         <style>
@@ -1041,7 +1084,9 @@ try:
             else:
                 st.warning("Coordinate data not found for these specific recommendations.")
         
-    # ========================== TAB 4: DIAGNOSTICS ==========================
+    # -------------------------------------------------------------------------
+    # TAB 3: DIAGNOSTICS
+    # -------------------------------------------------------------------------
     elif st.session_state.active_page == "Diagnostics":
         st.subheader("Recommendation Engine Diagnostics & Evaluation")
         st.markdown("Quantitative performance assessment dynamically tracking changes across models.")
@@ -1459,6 +1504,15 @@ try:
             # Render the plot in Streamlit and clear memory
             st.pyplot(fig)
             plt.close(fig)
-        
+# =========================================================================
+# END PART 6.4: PAGE CONTENT ROUTING
+# =========================================================================
+
+# =========================================================================
+# START PART 7: EXCEPTION HANDLING
+# =========================================================================
 except Exception as e:
     st.error(f"Application error: {e}")
+# =========================================================================
+# END PART 7: EXCEPTION HANDLING
+# =========================================================================
