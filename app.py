@@ -201,7 +201,7 @@ div[data-baseweb="tab"] {
 .why-choose-wrapper {
     border: 1px solid #e5e5e5;
     border-radius: 16px;
-    padding: 1px 30px 8px 20px;
+    padding: 1px 1px 8px 20px;
     background: #fafafa;
     margin-bottom: 20px;
 }
