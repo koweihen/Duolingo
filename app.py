@@ -26,7 +26,7 @@ selected_duration = "Ignore"
 selected_season = "Ignore"
 spend_range = (0, 1000)
 min_rating = 3.0
-top_n = 8
+top_n = 3
 active_tourist_id = None
 is_personalized = False
 
