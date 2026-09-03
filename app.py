@@ -1078,6 +1078,7 @@ try:
             prec_val = f"{current_row['Precision@5'] * 100:.2f}%"
             rec_val = f"{current_row['Recall@5'] * 100:.2f}%"
             f1_val = f"{current_row['F1@5'] * 100:.2f}%"
+            hr_val = f"{current_row['HR@5'] * 100:.2f}%"
             ndcg_val = f"{current_row['NDCG@5']:.4f}"
             
             rmse_val = f"{current_row['RMSE']:.4f}"
@@ -1088,6 +1089,7 @@ try:
             prec_delta = f"{(current_row['Precision@5'] - baseline_row['Precision@5']) * 100:+.2f}% vs {base_short}"
             rec_delta = f"{(current_row['Recall@5'] - baseline_row['Recall@5']) * 100:+.2f}% vs {base_short}"
             f1_delta = f"{(current_row['F1@5'] - baseline_row['F1@5']) * 100:+.2f}% vs {base_short}"
+            hr_delta = f"{(current_row['HR@5'] - baseline_row['HR@5']) * 100:+.2f}% vs {base_short}"
             ndcg_delta = f"{current_row['NDCG@5'] - baseline_row['NDCG@5']:+.4f} vs {base_short}"
             
             rmse_delta = f"{current_row['RMSE'] - baseline_row['RMSE']:+.4f} vs {base_short}"
@@ -1096,8 +1098,8 @@ try:
             clf_f1_delta = f"{(current_row['Class F1-Score'] - baseline_row['Class F1-Score']) * 100:+.2f}% vs {base_short}"
             
         except Exception:
-            prec_val = rec_val = f1_val = ndcg_val = rmse_val = mae_val = acc_val = clf_f1_val = "N/A"
-            prec_delta = rec_delta = f1_delta = ndcg_delta = rmse_delta = mae_delta = acc_delta = clf_f1_delta = None
+            prec_val = rec_val = f1_val = hr_val = ndcg_val = rmse_val = mae_val = acc_val = clf_f1_val = "N/A"
+            prec_delta = rec_delta = f1_delta = hr_delta = ndcg_delta = rmse_delta = mae_delta = acc_delta = clf_f1_delta = None
             curr_short = "Model"
 
         st.divider()  
@@ -1111,7 +1113,7 @@ try:
             box-shadow: 0 4px 6px rgba(0,0,0,0.02);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             color: #111;
-            min-height: 550px;
+            height: 100%;
             display: flex;
             flex-direction: column;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -1124,9 +1126,7 @@ try:
             position: relative;
             z-index: 10;
         }
-        .best-model .model-title {
-            color: #0078D4;
-        }
+        .best-model .model-title { color: #0078D4; }
         .best-model .card-pill {
             background-color: #0078D4;
             color: #ffffff;
@@ -1166,8 +1166,8 @@ try:
         .metric-row {
             display: flex;
             justify-content: space-between;
-            font-size: 0.85rem;
-            margin-bottom: 4px;
+            font-size: 0.82rem;
+            margin-bottom: 2px;
             color: #4b5563;
         }
         .metric-val {
@@ -1178,7 +1178,7 @@ try:
             background: #f3f4f6;
             height: 3px;
             width: 100%;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             border-radius: 2px;
         }
         .progress-fill {
@@ -1186,9 +1186,7 @@ try:
             height: 100%;
             border-radius: 2px;
         }
-        .best-model .progress-fill {
-            background: #0078D4;
-        }
+        .best-model .progress-fill { background: #0078D4; }
         .capabilities-list {
             list-style: none;
             padding: 0;
@@ -1219,9 +1217,14 @@ try:
                 "is_best": False,
                 "metrics": [
                     ("Accuracy", "89.55%", 89.5), 
+                    ("Class F1", "94.36%", 94.4), 
                     ("RMSE", "0.2872", 75), 
+                    ("MAE", "0.2449", 75), 
                     ("Precision@5", "0.45%", 85), 
-                    ("Recall@5", "1.21%", 87)
+                    ("Recall@5", "1.21%", 87),
+                    ("F1@5", "0.64%", 85),
+                    ("HR@5", "2.22%", 85),
+                    ("NDCG@5", "0.0082", 85)
                 ],
                 "capabilities": [
                     "✓ Learns from user similarities",
@@ -1237,9 +1240,14 @@ try:
                 "is_best": False,
                 "metrics": [
                     ("Accuracy", "88.95%", 88.9), 
+                    ("Class F1", "94.15%", 94.1),
                     ("RMSE", "0.3939", 55), 
+                    ("MAE", "0.3212", 55), 
                     ("Precision@5", "0.43%", 81), 
-                    ("Recall@5", "1.17%", 84)
+                    ("Recall@5", "1.17%", 84),
+                    ("F1@5", "0.62%", 83),
+                    ("HR@5", "2.17%", 83),
+                    ("NDCG@5", "0.0082", 85)
                 ],
                 "capabilities": [
                     "✓ Solves cold-start problems",
@@ -1252,12 +1260,17 @@ try:
                 "name": "Neural Network",
                 "sub": "Deep Learning Model",
                 "pill": "🏆 Top Performer",
-                "is_best": True,  # This flag triggers the styling
+                "is_best": True, 
                 "metrics": [
                     ("Accuracy", "88.95%", 88.9), 
+                    ("Class F1", "94.00%", 94.0),
                     ("RMSE", "0.3090", 69), 
+                    ("MAE", "0.2587", 70), 
                     ("Precision@5", "0.53%", 100), 
-                    ("Recall@5", "1.39%", 100)
+                    ("Recall@5", "1.39%", 100),
+                    ("F1@5", "0.75%", 100),
+                    ("HR@5", "2.61%", 100),
+                    ("NDCG@5", "0.0097", 100)
                 ],
                 "capabilities": [
                     "✓ Non-linear feature extraction",
@@ -1273,9 +1286,14 @@ try:
                 "is_best": False,
                 "metrics": [
                     ("Accuracy", "89.63%", 89.6), 
+                    ("Class F1", "94.52%", 94.5),
                     ("RMSE", "0.3312", 65), 
+                    ("MAE", "0.2751", 65), 
                     ("Precision@5", "0.49%", 92), 
-                    ("Recall@5", "1.38%", 99)
+                    ("Recall@5", "1.38%", 99),
+                    ("F1@5", "0.71%", 95),
+                    ("HR@5", "2.46%", 94),
+                    ("NDCG@5", "0.0089", 92)
                 ],
                 "capabilities": [
                     "✓ Maximum overall accuracy",
@@ -1316,7 +1334,7 @@ try:
         <div class="card-footer">{model["date"]}</div>
         </div>
         """, unsafe_allow_html=True)
-                st.divider()
+        st.divider()
         
         # 1. Initialize states for both buttons
         if "show_top_n" not in st.session_state:
@@ -1340,11 +1358,12 @@ try:
         # 3. Conditionally display Top-N Metrics
         if st.session_state.show_top_n:
             st.markdown("### Top-N Ranking Performance")
-            r1_col1, r1_col2, r1_col3, r1_col4 = st.columns(4)
+            r1_col1, r1_col2, r1_col3, r1_col4, r1_col5 = st.columns(5)
             r1_col1.metric(f"{curr_short} Precision@5", prec_val, delta=prec_delta, delta_color="normal")
             r1_col2.metric(f"{curr_short} Recall@5", rec_val, delta=rec_delta, delta_color="normal")
             r1_col3.metric(f"{curr_short} F1@5", f1_val, delta=f1_delta, delta_color="normal")
-            r1_col4.metric(f"{curr_short} NDCG@5", ndcg_val, delta=ndcg_delta, delta_color="normal")
+            r1_col4.metric(f"{curr_short} HR@5", hr_val, delta=hr_delta, delta_color="normal")
+            r1_col5.metric(f"{curr_short} NDCG@5", ndcg_val, delta=ndcg_delta, delta_color="normal")
 
             st.dataframe(
                 eval_metrics_df[["Algorithm", "Precision@5", "Recall@5", "F1@5", "HR@5", "NDCG@5"]]
@@ -1354,7 +1373,6 @@ try:
             st.markdown("### Ranking Metrics Dashboard")
             
             # Set the dataframe index to Model for easy plotting
-            # Make sure 'comparison_df' is defined or replace it with 'eval_metrics_df'
             metrics_to_plot = eval_metrics_df.set_index('Algorithm')
 
             sns.set_theme(style="whitegrid")
