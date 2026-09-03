@@ -48,7 +48,7 @@ st.set_page_config(page_title="Personalized Tourism Recommender", layout="wide",
 
 st.markdown("""
     <div style="top: 15px; left: 80px; font-weight: bold; color: black; font-size: 5rem; z-index: 9999999;">
-        Duolingo
+        TravelAI
     </div>
 """, unsafe_allow_html=True)
 
@@ -201,7 +201,7 @@ div[data-baseweb="tab"] {
 .why-choose-wrapper {
     border: 1px solid #e5e5e5;
     border-radius: 16px;
-    padding: 1px 20px 8px 20px;
+    padding: 1px 30px 8px 20px;
     background: #fafafa;
     margin-bottom: 20px;
 }
@@ -609,7 +609,7 @@ try:
     
         why_choose_html = (
                 '<div class="why-choose-wrapper">'
-                '<h3 class="why-choose-heading">Why Choose Duolingo?</h3>'
+                '<h3 class="why-choose-heading">Why Choose TravelAI?</h3>'
                 '<div style="display:flex; gap:24px; flex-wrap:wrap;">'
                 + cards_html +
                 '</div>'
