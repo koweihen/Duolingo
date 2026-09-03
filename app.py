@@ -250,6 +250,8 @@ div[data-baseweb="tab"] {
 # =========================================================================
 # START PART 4: IMAGE DATABASE & FETCHER
 # =========================================================================
+PLACEHOLDER_IMG = "https://placehold.co/400x300?text=No+Image"
+
 def get_attraction_photo(attraction_name, attr_meta_df):
     """
     Fetches the image URL directly from the provided metadata DataFrame.
@@ -258,14 +260,11 @@ def get_attraction_photo(attraction_name, attr_meta_df):
     if attr_meta_df is not None and not attr_meta_df.empty:
         meta_row = attr_meta_df[attr_meta_df['attraction_name'] == attraction_name]
         if not meta_row.empty:
-            # Check for common column names for the image URL
-            for col in ['image_url', 'image_url', 'image', 'Image', 'url', 'photo_url']:
+            for col in ['image_url', 'image', 'Image', 'url', 'photo_url']:
                 if col in meta_row.columns and pd.notna(meta_row[col].iloc[0]) and str(meta_row[col].iloc[0]).strip() != "":
                     return str(meta_row[col].iloc[0]).strip()
-                    
-    # Fallback placeholder if no URL is found in the CSV
-    seed = sum(ord(c) for c in attraction_name)
-    return f"https://loremflickr.com/400/300/landscape,chinese?lock={seed}"
+
+    return PLACEHOLDER_IMG
 # =========================================================================
 # END PART 4: IMAGE DATABASE & FETCHER
 # =========================================================================
@@ -571,7 +570,7 @@ try:
         
                 card_html = f"""
                     <div class="dest-card">
-                        <img src="{img_url}" alt="{name}">
+                        <img src="{img_url}" alt="{name}" onerror="this.onerror=null;this.src='{PLACEHOLDER_IMG}';">
                         <div class="dest-overlay">
                             <div class="dest-title">
                                 <a href="{nav_link}" target="_blank">{name} ↗</a>
@@ -812,7 +811,7 @@ try:
                             # 1. The Hover Card (Image with name and details inside)
                             card_html = f"""
                             <div class="dest-card">
-                                <img src="{img_url}" alt="{name}">
+                                <img src="{img_url}" alt="{name}" onerror="this.onerror=null;this.src='{PLACEHOLDER_IMG}';">
                                 <div class="dest-overlay">
                                     <div class="dest-title">
                                         <a href="{nav_link}" target="_blank">{name} ↗</a>
